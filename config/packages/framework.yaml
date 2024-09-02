@@ -1,0 +1,25 @@
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+    #csrf_protection: true
+
+    # Note that the session will be started ONLY if you read or write from it.
+    session: true
+
+    #esi: true
+    #fragments: true
+    
+    http_client:
+        scoped_clients:
+            meta.whatsapp:
+                auth_bearer: '%env(FB_PERMANENT_ACCESS_TOKEN)'
+                scope: 'https://graph.facebook.com/v20.0'
+                headers:
+                    Accept: 'application/json'
+                    Authorization: 'Bearer %env(FB_PERMANENT_ACCESS_TOKEN)%'
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file

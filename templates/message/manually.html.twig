@@ -1,0 +1,36 @@
+{% extends 'admin.html.twig' %}
+
+{% block title %}Envoyer un message manuellement{% endblock %}
+
+{% block content %}
+    <div class="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+        <h3 class="text-2xl font-semibold mb-6 text-gray-800">Envoyer un message manuellement</h3>
+
+        <form method="POST" action="{{ path('app_manually_send') }}">
+            <div class="mb-4">
+                <label for="contacts" class="block text-gray-700 text-sm font-medium mb-2">
+                    <ion-icon name="person-add" class="mr-2 text-gray-500"></ion-icon> Mes contacts
+                </label>
+                <select name="contacts[]" id="contacts" multiple
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300">
+                    <option value="261346556067">TOVOHERY +261 34 65 560 67</option>
+                    <option value="261341852233">ANDOSON +261 34 18 522 33</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="messages" class="block text-gray-700 text-sm font-medium mb-2">
+                    <ion-icon name="chatbubble-ellipses" class="mr-2 text-gray-500"></ion-icon> Message
+                </label>
+                <textarea rows="6" name="messages" id="messages"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                    placeholder="Écrire un message court"></textarea>
+            </div>
+            <div>
+                <button type="submit"
+                    class="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                    <ion-icon name="send" class="mr-2"></ion-icon> Envoyer le message
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

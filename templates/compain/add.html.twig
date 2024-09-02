@@ -1,0 +1,68 @@
+{% extends 'admin.html.twig' %}
+
+{% block title %}{{ title ?? 'Ajouter une campagne' }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <h3 class="text-2xl font-semibold mb-6">{{ title ?? 'Ajouter une campagne' }}</h3>
+
+    <form method="post" action="{{ action ?? '/campaign' }}" class="space-y-6">
+        <div class="flex justify-end space-x-4">
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300">
+                <ion-icon name="save" class="mr-2"></ion-icon> Enregistrer
+            </button>
+            <button type="reset" class="px-4 py-2 bg-gray-300 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition duration-300">
+                <ion-icon name="close" class="mr-2"></ion-icon> Annuler
+            </button>
+        </div>
+        
+        <div class="form-group flex items-center">
+            <ion-icon name="title" class="mr-2 text-gray-500"></ion-icon>
+            <label for="title" class="block text-sm font-medium text-gray-700">Titre</label>
+            <input type="text" id="title" placeholder="Titre" value="{{ campagn.id ?? '' }}" name="title" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm" />
+        </div>
+
+        <div class="form-group flex items-center">
+            <ion-icon name="mail" class="mr-2 text-gray-500"></ion-icon>
+            <label for="emailsubjective" class="block text-sm font-medium text-gray-700">Objet de l'email</label>
+            <input type="email" id="emailsubjective" value="{{ campagn.email ?? '' }}" placeholder="Email subjective" name="Email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm" />
+        </div>
+
+        <div class="form-group flex items-center">
+            <ion-icon name="document" class="mr-2 text-gray-500"></ion-icon>
+            <label for="templatesubject" class="block text-sm font-medium text-gray-700">Template</label>
+            <select name="templates[]" multiple class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm">
+                <option value="5" {{ campagn.templates ?? '' }}>Build website very affordable</option>
+                <option value="956" selected>Get your website affordable</option>
+            </select>
+        </div>
+
+        <div class="form-group flex items-center">
+            <ion-icon name="list" class="mr-2 text-gray-500"></ion-icon>
+            <label for="emailist" class="block text-sm font-medium text-gray-700">Email list</label>
+            <select name="emailist[]" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm">
+                <option value="mamel" selected>B Emails (emails)</option>
+                <option value="clongan">C Message (mameil)</option>
+            </select>
+        </div>
+
+        <div class="form-group flex items-center">
+            <ion-icon name="settings" class="mr-2 text-gray-500"></ion-icon>
+            <label for="detailsmtp" class="block text-sm font-medium text-gray-700">Détail SMTP</label>
+            <select name="detailsmtp" id="detailsmtp" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm">
+                <option value="nude" selected>Unitedwebsoft SMTP</option>
+                <option value="riskfactor">Another SMTP</option>
+            </select>
+        </div>
+
+        <div class="form-group flex items-center">
+            <ion-icon name="toggle" class="mr-2 text-gray-500"></ion-icon>
+            <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+            <select name="status" id="status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm">
+                <option value="1" selected>Active</option>
+                <option value="0">Inactive</option>
+            </select>
+        </div>
+    </form>
+</div>
+{% endblock %}

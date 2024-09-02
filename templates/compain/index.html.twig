@@ -1,0 +1,79 @@
+{% extends 'admin.html.twig' %}
+
+{% block title %}Campagnes{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+        function handleEditClick(id) {
+            location.href = '/campaign/'+ id +'/edit';
+        }
+
+        function handleDeleteClick(id) {
+            const isConfirmed = confirm('Voulez-vous vraiment supprimer la campagne '+ id + '?');
+
+            if (isConfirmed) {
+                fetch('/campaign/'+ id +'/delete', {
+                    method: 'POST',
+                }).then(res => res.json())
+                .then(data => {
+                    console.log(data);
+                    location.reload(); // Recharger la page après suppression
+                });
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-semibold">Gestion des Campagnes</h3>
+        <a href="/campaign/add" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300">
+            <ion-icon name="add" class="mr-2"></ion-icon> Ajouter une campagne
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email list</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Template</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last run count</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created on</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% if not campaigns %}
+                <tr>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">Aucune donnée présente dans la base de données.</td>
+                </tr>
+                {% endif %}
+                {% for campaign in campaigns %}
+                <tr>
+                    <td class="px-6 py-4">{{ campaign.id }}</td>
+                    <td class="px-6 py-4">{{ campaign.title }}</td>
+                    <td class="px-6 py-4">{{ campaign.email }}</td>
+                    <td class="px-6 py-4">{{ campaign.email }}</td>
+                    <td class="px-6 py-4">{{ campaign.email }}</td>
+                    <td class="px-6 py-4">{{ campaign.email }}</td>
+                    <td class="px-6 py-4">{{ campaign.status }}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="handleEditClick({{ campaign.id }})" class="px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 transition duration-300">
+                            <ion-icon name="pencil" class="mr-2"></ion-icon> Modifier
+                        </button>
+                        <button onclick="handleDeleteClick({{ campaign.id }})" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition duration-300 ml-2">
+                            <ion-icon name="trash" class="mr-2"></ion-icon> Supprimer
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
