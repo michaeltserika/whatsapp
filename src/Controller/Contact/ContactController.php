@@ -11,66 +11,52 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Contact;
 use App\Form\ContactType;
 
+
 #[IsGranted('ROLE_ADMIN')]
-class ContactController extends AbstractController
+class ContactController  extends AbstractController
 {
-    #[Route('/contacts', methods: ['GET'], name: 'app_contact_contact')]
-    public function index(
-        Request $request,
-        ContactRepository $repos,
-
-    ): Response
+    #[Route('/contacts', name: 'contact_list', methods: ['GET'])]
+    public function index(ContactRepository $contactRepository): Response
     {
-        $contacts = $repos->findAll();
-        
-        // dd($contacts);
-
-        return $this->render('contacts/list.html.twig', [
-            "contacts" => $contacts,
-        ]);
+        $contacts = $contactRepository->findAll();
+        return $this->render('contacts/list.html.twig', ['contacts' => $contacts]);
     }
 
-    #[Route('/contacts/ajouter', name: 'app_contact_create')]
-    public function add(
-        Request $request,
-        ContactRepository $repos,
-        // EntityManagerInterface $entityManager
-    ): Response
+    #[Route('/contacts/add', name: 'contact_add', methods: ['GET', 'POST'])]
+    public function add(Request $request, EntityManagerInterface $em): Response
     {
-        $user = $this->getUser();
-
         $contact = new Contact();
-
         $form = $this->createForm(ContactType::class, $contact);
 
         $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid())
-        {
-            $contact = $form->getData();
-
-            $contact->setUserId($user->getId());
-
-            $repos->save($contact);
-
-
-            if ($success)
-                $this->addFlash('notice', 'Contact a été bien enregistrer.');
-
-            return $this->redirectRoute('app_', ['id' => $fzef]);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($contact);
+            $em->flush();
+            return $this->redirectToRoute('contact_list');
         }
 
-        return $this->render('contacts/add.html.twig', [
-            'form' => $form,
-            // 'contact' => $contact
-        ]);
+        return $this->render('contacts/add.html.twig', ['form' => $form->createView()]);
     }
 
-
-
-    #[Route('/contacts/unscribe', methods: ['GET'], name: 'app_contact_unscribe')]
-    public function unscribe(): Response
+    #[Route('/contacts/{id}/edit', name: 'contact_edit', methods: ['GET', 'POST'])]
+    public function edit(Contact $contact, Request $request, EntityManagerInterface $em): Response
     {
-        
+        $form = $this->createForm(ContactType::class, $contact);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+            return $this->redirectToRoute('contact_list');
+        }
+
+        return $this->render('contacts/add.html.twig', ['form' => $form->createView()]);
+    }
+
+    #[Route('/contacts/{id}', name: 'contact_delete', methods: ['GET'])]
+    public function delete(Contact $contact, EntityManagerInterface $em): Response
+    {
+        $em->remove($contact);
+        $em->flush();
+        return $this->redirectToRoute('contact_list');
     }
 }

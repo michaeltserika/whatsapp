@@ -29,6 +29,12 @@ class Contact
     #[ORM\Column(length: 50)]
     private ?string $status = null;
 
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $created_at = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $updated_at = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -37,18 +43,6 @@ class Contact
     public function getFullname(): ?string
     {
         return $this->fullname;
-    }
-
-    public function setUserId(string $user_id): static
-    {
-        $this->user_id = $user_id;
-
-        return $this;
-    }
-
-    public function getUserId(): ?string
-    {
-        return $this->user_id;
     }
 
     public function setFullname(string $fullname): static
@@ -66,6 +60,18 @@ class Contact
     public function setEmail(string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getUserId(): ?string
+    {
+        return $this->user_id;
+    }
+
+    public function setUserId(string $user_id): static
+    {
+        $this->user_id = $user_id;
 
         return $this;
     }
@@ -99,9 +105,9 @@ class Contact
         return $this->created_at;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $datetime): static
+    public function setCreatedAt(\DateTimeInterface $created_at): static
     {
-        $this->created_at = $datetime;
+        $this->created_at = $created_at;
 
         return $this;
     }
@@ -111,10 +117,11 @@ class Contact
         return $this->updated_at;
     }
 
-    public function setUpdatedAt(?\DateTimeInterface $datetime): static
+    public function setUpdatedAt(?\DateTimeInterface $updated_at): static
     {
-        $this->updated_at = $datetime;
+        $this->updated_at = $updated_at;
 
         return $this;
     }
 }
+

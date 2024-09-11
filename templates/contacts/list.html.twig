@@ -8,17 +8,8 @@
             location.href = "/contacts/" + id + "/edit";
         }
 
-        function handleDelete(id) {
-            const isConfirmed = confirm('Voulez-vous supprimer le contact "' + id + '"');
-            if (isConfirmed) {
-                fetch('/contacts/' + id, {
-                    method: 'DELETE',
-                }).then(res => res.json())
-                .then(data => {
-                    console.log(data);
-                    location.reload(); // Reload the page after deletion
-                });
-            }
+        function handleDelete(id){
+            location.href = "/contacts/" + id
         }
     </script>
 {% endblock %}
@@ -27,7 +18,7 @@
 <div class="max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg">
     <h3 class="text-3xl font-bold mb-4 text-gray-900">Liste de mes contacts</h3>
     
-    <a href="/contacts/ajouter" class="mb-4 inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+    <a href="/contacts/add" class="mb-4 inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
         <ion-icon name="add" class="mr-2 text-lg"></ion-icon>Créer un contact
     </a>
 
@@ -61,8 +52,8 @@
                     <td class="px-6 py-4 text-gray-700">{{ contact.email }}</td>
                     <td class="px-6 py-4 text-gray-700">{{ contact.getPhoneNumber }}</td>
                     <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium leading-4 rounded-full text-green-800 bg-green-100">
-                            <ion-icon name="checkmark-circle" class="mr-1 text-lg"></ion-icon> Vérifié
+                        <span class="inline-flex items-center px-2 py-1 text-xs font-medium leading-4 rounded-full {{ contact.status == 1? "text-green-800 bg-green-100 " : (contact.status == 0? "text-zinc-600 bg-zinc-300" : "text-white bg-red-600") }}">
+                            <ion-icon name="{{ contact.status == 1? "checkmark-circle" : (contact.status == 0? "radio-button-off" : "Close-circle") }}" class="mr-1 text-lg"></ion-icon> {{ contact.status == 1? "Verifier" : (contact.status == 0? "En attente" : "Non verifier") }}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-center space-x-2">

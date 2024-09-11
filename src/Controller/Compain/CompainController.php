@@ -114,7 +114,7 @@ class CompainController extends AbstractController
         return $this->redirect('/campaign');
     }
 
-    #[Route('/compain/add', methods: ['GET'], name: 'app_compaign_add')]
+    #[Route('/campaign/add', methods: ['GET'], name: 'app_compaign_add')]
     public function add(): Response
     {
         return $this->render('compain/add.html.twig', [

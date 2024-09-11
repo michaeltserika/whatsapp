@@ -1,0 +1,446 @@
+Pour mettre en place une connexion via Webhook avec l'API WhatsApp et intégrer toutes les fonctionnalités CRUD de ton projet, voici les étapes générales à suivre. Nous allons également configurer l'intégration avec l'API WhatsApp Business.
+
+### 1. **Configurer le Webhook pour WhatsApp Business API**
+
+#### a. **Configuration des Routes (Webhook de Réception des Messages)**
+
+Dans ton fichier `routes.yaml`, ajoute une nouvelle route pour gérer les notifications entrantes via Webhook.
+
+```yaml
+# config/routes/whatsapp.yaml
+webhook_whatsapp:
+    path: /webhook/whatsapp
+    controller: App\Controller\WhatsAppController::webhook
+    methods: [POST]
+```
+
+#### b. **Création du Controller WhatsApp**
+
+Dans le contrôleur `WhatsAppController.php`, tu vas créer une méthode pour recevoir les messages via le Webhook et envoyer des réponses automatiques ou manuelles.
+
+```php
+// src/Controller/WhatsAppController.php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class WhatsAppController extends AbstractController
+{
+    public function webhook(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        // Vérification du token de vérification du webhook
+        $verifyToken = $this->getParameter('WA_WEBHOOK_VERIFY_TOKEN');
+        if (isset($data['hub_verify_token']) && $data['hub_verify_token'] === $verifyToken) {
+            return new JsonResponse($data['hub_challenge']);
+        }
+
+        // Traitement du message entrant
+        if (isset($data['entry'][0]['changes'][0]['value']['messages'])) {
+            $message = $data['entry'][0]['changes'][0]['value']['messages'][0];
+            // Logique pour traiter le message et envoyer une réponse
+
+            // Exemple : envoyer une réponse automatique
+            if ($message['type'] === 'text') {
+                $this->sendWhatsAppMessage($message['from'], 'Merci pour votre message !');
+            }
+        }
+
+        return new JsonResponse(['status' => 'success'], 200);
+    }
+
+    private function sendWhatsAppMessage(string $to, string $message): void
+    {
+        $token = $this->getParameter('WA_TOKEN');
+        $phoneId = $this->getParameter('WA_PHONE_ID');
+        $url = "https://graph.facebook.com/v15.0/$phoneId/messages";
+
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'to' => $to,
+            'text' => ['body' => $message],
+        ];
+
+        $headers = [
+            'Authorization: Bearer ' . $token,
+            'Content-Type: application/json',
+        ];
+
+        // Effectuer la requête HTTP POST pour envoyer le message
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+}
+```
+
+### 2. **Configurer l'Environnement (Fichier `.env`)**
+
+Assure-toi que toutes les informations nécessaires à la connexion avec l'API WhatsApp Business sont bien configurées dans ton fichier `.env` :
+
+```dotenv
+WA_BUSINESS_NUMBER=380905485110466
+WA_PHONE_ID=347610445111843
+WA_TOKEN=3c608e47152c7b175e9d3c171002dc234bb00953
+WA_WEBHOOK_VERIFY_TOKEN=whatsapp_verify_token
+```
+
+### 3. **CRUD pour les Entités**
+
+Il semble que tu as déjà les entités principales, comme `Campaign`, `Contact`, et `User`. Assurons-nous que tu as bien les fonctionnalités CRUD pour ces entités. Voici un exemple pour la gestion des contacts :
+
+#### a. **Controller pour la Gestion des Contacts**
+
+Dans le `ContactController.php`, tu gères les opérations CRUD de base.
+
+```php
+// src/Controller/ContactController.php
+
+namespace App\Controller;
+
+use App\Entity\Contact;
+use App\Form\ContactType;
+use App\Repository\ContactRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
+class ContactController extends AbstractController
+{
+    #[Route('/contacts', name: 'contact_list', methods: ['GET'])]
+    public function index(ContactRepository $contactRepository): Response
+    {
+        $contacts = $contactRepository->findAll();
+        return $this->render('contacts/list.html.twig', ['contacts' => $contacts]);
+    }
+
+    #[Route('/contacts/add', name: 'contact_add', methods: ['GET', 'POST'])]
+    public function add(Request $request, EntityManagerInterface $em): Response
+    {
+        $contact = new Contact();
+        $form = $this->createForm(ContactType::class, $contact);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($contact);
+            $em->flush();
+            return $this->redirectToRoute('contact_list');
+        }
+
+        return $this->render('contacts/add.html.twig', ['form' => $form->createView()]);
+    }
+
+    #[Route('/contacts/{id}/edit', name: 'contact_edit', methods: ['GET', 'POST'])]
+    public function edit(Contact $contact, Request $request, EntityManagerInterface $em): Response
+    {
+        $form = $this->createForm(ContactType::class, $contact);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+            return $this->redirectToRoute('contact_list');
+        }
+
+        return $this->render('contacts/add.html.twig', ['form' => $form->createView()]);
+    }
+
+    #[Route('/contacts/{id}', name: 'contact_delete', methods: ['DELETE'])]
+    public function delete(Contact $contact, EntityManagerInterface $em): Response
+    {
+        $em->remove($contact);
+        $em->flush();
+        return $this->redirectToRoute('contact_list');
+    }
+}
+```
+
+#### b. **Création du Formulaire ContactType**
+
+Le formulaire associé pour la création et la modification des contacts.
+
+```php
+// src/Form/ContactType.php
+
+namespace App\Form;
+
+use App\Entity\Contact;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+class ContactType extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $builder
+            ->add('name', TextType::class)
+            ->add('phone', TextType::class)
+            ->add('email', TextType::class);
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults([
+            'data_class' => Contact::class,
+        ]);
+    }
+}
+```
+
+#### c. **Vue Twig pour Afficher et Ajouter des Contacts**
+
+Dans `templates/contacts/list.html.twig` et `templates/contacts/add.html.twig`, tu peux ajouter les vues pour afficher et créer les contacts.
+
+### 4. **Test et Déploiement**
+
+- Teste le Webhook via l'API Graph pour t'assurer que les messages sont bien reçus.
+- Assure-toi que les fonctionnalités CRUD sont opérationnelles en local avant de déployer.
+
+Cela te permettra d’intégrer WhatsApp API avec ton projet et de gérer toutes les fonctionnalités nécessaires.
+
+
+
+
+
+Pour mettre en place l'API WhatsApp via Webhook ainsi que l'API SMS dans ton projet Symfony, voici un guide détaillé. Je vais te montrer comment intégrer les webhooks de WhatsApp et une API SMS, puis t'expliquer comment gérer les envois de messages.
+
+### 1. **Intégration du Webhook WhatsApp** 
+
+#### a. **Configuration du Webhook**
+Tu as déjà configuré certaines variables d'environnement dans ton fichier `.env`. Voici les principales variables importantes pour l'intégration de WhatsApp :
+```bash
+WA_PHONE_ID=347610445111843
+WA_TOKEN=3c608e47152c7b175e9d3c171002dc234bb00953
+WA_WEBHOOK_VERIFY_TOKEN=whatsapp_verify_token
+```
+
+#### b. **Création du Webhook WhatsApp**
+
+1. **Crée un contrôleur pour gérer les requêtes Webhook** :
+Dans `src/Controller/WhatsAppController.php`, tu vas créer une méthode pour recevoir les notifications via Webhook.
+
+```php
+namespace App\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
+class WhatsAppController
+{
+    #[Route('/webhook/whatsapp', name: 'whatsapp_webhook', methods: ['POST', 'GET'])]
+    public function handleWebhook(Request $request): Response
+    {
+        $verifyToken = $_ENV['WA_WEBHOOK_VERIFY_TOKEN'];
+
+        if ($request->isMethod('GET')) {
+            // Vérification du webhook
+            $hubVerifyToken = $request->query->get('hub_verify_token');
+            if ($hubVerifyToken === $verifyToken) {
+                return new Response($request->query->get('hub_challenge'));
+            }
+            return new Response('Token non valide', 403);
+        }
+
+        // Processus des messages reçus
+        $content = json_decode($request->getContent(), true);
+        // Ici, tu traites les données envoyées par WhatsApp Business
+        // Par exemple, tu peux récupérer le numéro de téléphone et le message envoyé
+        // $message = $content['entry'][0]['changes'][0]['value'];
+
+        return new Response('Webhook reçu', 200);
+    }
+}
+```
+
+2. **Configurer le webhook dans Facebook Developer** :
+   - Dans ton application Meta for Developers (Facebook Developer), configure l'URL du webhook pour qu'il pointe vers `https://ton-domaine.com/webhook/whatsapp`.
+   - Utilise le `WA_WEBHOOK_VERIFY_TOKEN` pour valider la connexion.
+
+3. **Réception et traitement des messages** :
+   - Le contrôleur `WhatsAppController` est responsable de recevoir les notifications de messages WhatsApp.
+
+#### c. **Envoi de messages via l'API WhatsApp**
+Pour envoyer des messages via l'API WhatsApp, tu dois faire un appel à l'API Facebook Graph.
+
+1. **Créer un service pour l'envoi des messages** :
+   Dans `src/Services/WhatsappService.php` :
+   
+```php
+namespace App\Services;
+
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+
+class WhatsappService
+{
+    private $httpClient;
+    private $phoneId;
+    private $token;
+
+    public function __construct(HttpClientInterface $httpClient)
+    {
+        $this->httpClient = $httpClient;
+        $this->phoneId = $_ENV['WA_PHONE_ID'];
+        $this->token = $_ENV['WA_TOKEN'];
+    }
+
+    public function sendMessage(string $recipientNumber, string $message): void
+    {
+        $url = 'https://graph.facebook.com/v13.0/' . $this->phoneId . '/messages';
+
+        $this->httpClient->request('POST', $url, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->token,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'messaging_product' => 'whatsapp',
+                'to' => $recipientNumber,
+                'type' => 'text',
+                'text' => [
+                    'body' => $message,
+                ],
+            ],
+        ]);
+    }
+}
+```
+
+2. **Utilisation dans un contrôleur** :
+Tu peux utiliser ce service dans ton `SendMessageController` pour envoyer des messages.
+
+```php
+namespace App\Controller;
+
+use App\Services\WhatsappService;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
+class SendMessageController
+{
+    private $whatsappService;
+
+    public function __construct(WhatsappService $whatsappService)
+    {
+        $this->whatsappService = $whatsappService;
+    }
+
+    #[Route('/send-message', name: 'send_message')]
+    public function sendMessage(Request $request): Response
+    {
+        $recipient = $request->request->get('recipient');
+        $message = $request->request->get('message');
+
+        $this->whatsappService->sendMessage($recipient, $message);
+
+        return new Response('Message envoyé via WhatsApp');
+    }
+}
+```
+
+### 2. **Intégration de l'API SMS**
+
+Pour envoyer des SMS, tu peux utiliser des services comme Twilio, Nexmo, ou tout autre fournisseur d'API SMS. Voici un exemple avec **Twilio**.
+
+#### a. **Installer Twilio SDK** :
+Dans ton projet Symfony, tu peux installer le SDK Twilio avec Composer :
+
+```bash
+composer require twilio/sdk
+```
+
+#### b. **Configuration des variables d'environnement pour Twilio** :
+Ajoute les variables Twilio dans ton fichier `.env` :
+```bash
+TWILIO_SID=your_twilio_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_PHONE_NUMBER=your_twilio_phone_number
+```
+
+#### c. **Créer un service pour l'envoi de SMS** :
+
+Dans `src/Services/SmsService.php` :
+```php
+namespace App\Services;
+
+use Twilio\Rest\Client;
+
+class SmsService
+{
+    private $twilioSid;
+    private $twilioAuthToken;
+    private $twilioPhoneNumber;
+    private $client;
+
+    public function __construct()
+    {
+        $this->twilioSid = $_ENV['TWILIO_SID'];
+        $this->twilioAuthToken = $_ENV['TWILIO_AUTH_TOKEN'];
+        $this->twilioPhoneNumber = $_ENV['TWILIO_PHONE_NUMBER'];
+        $this->client = new Client($this->twilioSid, $this->twilioAuthToken);
+    }
+
+    public function sendSms(string $recipientNumber, string $message): void
+    {
+        $this->client->messages->create(
+            $recipientNumber,
+            [
+                'from' => $this->twilioPhoneNumber,
+                'body' => $message,
+            ]
+        );
+    }
+}
+```
+
+#### d. **Utilisation du service SMS dans un contrôleur** :
+
+Dans `src/Controller/SendMessageController.php` :
+```php
+use App\Services\SmsService;
+
+class SendMessageController
+{
+    private $smsService;
+
+    public function __construct(SmsService $smsService)
+    {
+        $this->smsService = $smsService;
+    }
+
+    #[Route('/send-sms', name: 'send_sms')]
+    public function sendSms(Request $request): Response
+    {
+        $recipient = $request->request->get('recipient');
+        $message = $request->request->get('message');
+
+        $this->smsService->sendSms($recipient, $message);
+
+        return new Response('SMS envoyé');
+    }
+}
+```
+
+### 3. **Interfaces et CRUD pour le projet**
+
+Pour chaque entité (`Campaign`, `Contact`, etc.), tu peux utiliser le générateur de formulaire et CRUD de Symfony pour créer les interfaces :
+
+1. **Créer les formulaires** pour les entités dans `src/Form/` (par exemple, `ContactType.php`).
+2. **Utiliser les méthodes de Symfony pour créer, éditer et supprimer** des entités via les contrôleurs, en utilisant Doctrine et les repositories pour interagir avec la base de données.
+
+### Conclusion
+
+Ce guide te permet d'intégrer les webhooks WhatsApp, l'API SMS avec Twilio, et de gérer les fonctionnalités CRUD dans ton projet Symfony. Si tu as d'autres questions ou souhaites plus de détails sur un point particulier, n'hésite pas à me demander 

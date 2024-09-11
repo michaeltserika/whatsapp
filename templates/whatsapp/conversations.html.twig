@@ -1,0 +1,194 @@
+{% extends 'admin.html.twig' %}
+
+{% block title %}Envoyer et Recevoir des Messages{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .chat-container {
+            display: flex;
+            height: 80vh;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .contacts-list {
+            width: 70%;
+            background-color: #f8f9fa;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .chat-section {
+            width: 100%;
+            padding: 20px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            padding-right: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .message-sent {
+            justify-content: flex-end;
+        }
+        .message-received {
+            justify-content: flex-start;
+        }
+        .message-content {
+            display: inline-block;
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .message-sent .message-content {
+            background-color: #dcf8c6;
+            color: #333;
+        }
+        .message-received .message-content {
+            background-color: #e9ecef;
+            color: #333;
+        }
+        .inputgroup {
+            margin: 5px 0;
+            position: relative;
+        }
+        .monmessage {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+        .monmessage textarea {
+            border-radius: 10px;
+            padding: 10px;
+            resize: none;
+        }
+        .monmessage button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .monmessage button:hover {
+            background-color: #0056b3;
+        }
+        .monmessage ion-icon {
+            margin-right: 5px;
+        }
+        .contact-card {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .contact-card:hover {
+            background-color: #f1f1f1;
+        }
+        .contact-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        .contact-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        .contact-phone {
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+    {% endblock %}
+
+
+    {% block content %}
+    <div class="container mx-auto flex flex-col w-screen">
+        <h1 class="text-2xl font-bold mb-4">Envoyer et Recevoir des Messages</h1>
+        <div class="chat-container flex w-full rounded-lg shadow-lg">
+            <!-- Liste des contacts -->
+            <div class="contacts-list">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <ion-icon name="people-circle-outline" size="large"></ion-icon>
+                    Contacts
+                </h2>
+                <div>
+                    {% if not contacts %}
+                        <p class="text-center text-gray-500">Aucun contact disponible.</p>
+                    {% else %}
+                        <ul>
+                            {% for contact in contacts %}
+                                <li class="mb-4">
+                                    <a href="{{ path('app_conversation', { 'contact_id': contact.id }) }}" class="contact-card">
+                                        <img src="{{ asset('/images/logo.png') }}" alt="Photo de contact" class="contact-photo">
+                                        <div>
+                                            <p class="contact-name">{{ contact.fullname }}</p>
+                                            <p class="contact-phone">{{ contact.phoneNumber }}</p>
+                                        </div>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Section de discussion -->
+            <div class="chat-section w-full">
+                {% if selected_contact %}
+                    <h2 class="text-xl font-bold mb-4 flex items-center">
+                        <ion-icon name="chatbubble-ellipses-outline" size="large"></ion-icon>
+                        Discussion avec {{ selected_contact.fullname }}
+                    </h2>
+                    <div class="message-list">
+                        {% for message in messages %}
+                            <div class="message {% if message.isSent %}message-sent{% else %}message-received{% endif %}">
+                                <div class="message-content">
+                                    <p>{{ message.content }}</p>
+                                    <span class="text-sm text-gray-500">{{ message.sent_at|date('d-m-Y H:i') }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Formulaire d'envoi de message -->
+                    <form class="monmessage" action="{{ path('send_message') }}" method="POST">
+                        <input type="hidden" name="phone" value="{{ selected_contact.phoneNumber }}" />
+                        <div class="inputgroup w-full flex">
+                            <textarea name="message" class="w-full border-gray-300 border" placeholder="Texte du message" rows="5" required></textarea>
+                        </div>
+                        <div class="inputgroup">
+                            <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-lg">
+                                <ion-icon name="send-outline"></ion-icon>
+                                Envoyer
+                            </button>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="flex items-center justify-center h-full">
+                        <p class="text-gray-500">Sélectionnez un contact pour commencer une conversation.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

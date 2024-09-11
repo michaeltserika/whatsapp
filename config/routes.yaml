@@ -1,5 +1,30 @@
+# config/routes.yaml
+
 controllers:
     resource:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+# Route pour afficher les conversations
+app_conversation:
+    path: /whatsapp/conversations
+    controller: App\Controller\WhatsAppController::showConversations
+
+# Route pour envoyer un message
+send_message:
+    path: /whatsapp/send
+    controller: App\Controller\WhatsAppController::sendMessage
+    methods: POST
+
+# Route pour le webhook de WhatsApp
+whatsapp_webhook:
+    path: /webhook/whatsapp
+    controller: App\Controller\WhatsAppController::handleWebhook
+    methods: POST
+
+# Route pour le webhook de WhatsApp avec un autre nom
+webhook_whatsapp:
+    path: /whatsapp/webhook
+    controller: App\Controller\WhatsAppController::receiveMessage
+    methods: POST

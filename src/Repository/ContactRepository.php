@@ -25,6 +25,17 @@ class ContactRepository extends ServiceEntityRepository
         return $em->flush();
     }
 
+    public function remove(Contact $contact)
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "DELETE FROM contacts WHERE contacts.id = :contact_id";
+
+        $resultSet = $conn->executeQuery($sql, ['contact_id' => $contact->getId()]);
+
+        return true;
+    }
+
     //    /**
     //     * @return Contact[] Returns an array of Contact objects
     //     */
