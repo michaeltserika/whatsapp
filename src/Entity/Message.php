@@ -56,7 +56,7 @@ class Message
 
     public function setSentAt(\DateTimeInterface $sent_at): static
     {
-        $this->sent_at = $sentAt;
+        $this->sent_at = $sent_at;
         return $this;
     }
 

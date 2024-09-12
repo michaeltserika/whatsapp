@@ -163,7 +163,7 @@
                             <div class="message {% if message.isSent %}message-sent{% else %}message-received{% endif %}">
                                 <div class="message-content">
                                     <p>{{ message.content }}</p>
-                                    <span class="text-sm text-gray-500">{{ message.sent_at|date('d-m-Y H:i') }}</span>
+                                    <span class="text-sm text-gray-500">{{ message.sentAt|date('d-m-Y H:i') }}</span>
                                 </div>
                             </div>
                         {% endfor %}
